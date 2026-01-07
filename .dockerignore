@@ -1,0 +1,17 @@
+.git
+.github
+.idea
+build/freeswitch.build
+**/*.o
+**/*.lo
+**/*.la
+**/*.so
+**/*.log
+**/*.a
+tmp
+test
+doc
+html
+man
+install
+libs/win32
