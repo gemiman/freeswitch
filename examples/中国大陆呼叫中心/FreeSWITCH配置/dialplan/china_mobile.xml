@@ -1,0 +1,35 @@
+<include>
+  <context name="public">
+    
+    <!-- 
+        1. 外呼国内手机号 
+        规则: 11位数字，以 1 开头 (如 13800138000)
+    -->
+    <extension name="outbound_mobile">
+      <condition field="destination_number" expression="^(1[3-9]\d{9})$">
+        <!-- 必须设置正确的主叫号码，否则会被运营商拦截 -->
+        <action application="set" data="effective_caller_id_number=861088888888"/>
+        <action application="set" data="effective_caller_id_name=MyCompany"/>
+        
+        <!-- 强制使用 PCMA 编码 -->
+        <action application="export" data="absolute_codec_string=PCMA"/>
+        
+        <!-- 通过 IMS 网关外呼 -->
+        <action application="bridge" data="sofia/gateway/china-ims-bj/$1"/>
+      </condition>
+    </extension>
+
+    <!-- 
+        2. 外呼国内固话
+        规则: 0开头 + 2-3位区号 + 7-8位号码 (如 02188888888)
+    -->
+    <extension name="outbound_landline">
+      <condition field="destination_number" expression="^(0\d{2,3}\d{7,8})$">
+        <action application="set" data="effective_caller_id_number=861088888888"/>
+        <action application="export" data="absolute_codec_string=PCMA"/>
+        <action application="bridge" data="sofia/gateway/china-ims-bj/$1"/>
+      </condition>
+    </extension>
+
+  </context>
+</include>

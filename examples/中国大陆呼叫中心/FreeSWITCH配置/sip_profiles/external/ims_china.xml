@@ -1,0 +1,32 @@
+<include>
+  <!-- 
+      中国运营商 IMS 对接模板 
+      注意: IMS 通常采用 IP 对接模式，不需要 username/password 注册
+  -->
+  <gateway name="china-ims-bj">
+    <!-- IMS 代理服务器 IP -->
+    <param name="proxy" value="10.20.30.40"/>
+    <param name="realm" value="ims.bj.chinamobile.com"/>
+    
+    <!-- 必须配置为 false，IMS 专线通常不需要注册 -->
+    <param name="register" value="false"/>
+    
+    <!-- 主叫号码 (必须是运营商分配的真实号码) -->
+    <param name="username" value="861088888888"/>
+    <param name="password" value="nopassword"/>
+    
+    <!-- 关键参数: 处理 IMS 的兼容性 -->
+    <param name="from-user" value="861088888888"/>
+    <param name="from-domain" value="ims.bj.chinamobile.com"/>
+    
+    <!-- 心跳保活 (部分地区要求设为 0 关闭) -->
+    <param name="ping" value="25"/>
+    
+    <!-- 扩展参数 -->
+    <param name="extension" value="861088888888"/>
+    <param name="context" value="public"/>
+    
+    <!-- 忽略由 IMS 发送的 183 早期媒体 (可选) -->
+    <!-- <param name="ignore-early-media" value="true"/> -->
+  </gateway>
+</include>

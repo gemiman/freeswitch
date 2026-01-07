@@ -1,0 +1,32 @@
+<include>
+  <!-- 
+      对接阿里云智能语音交互 (通过 UniMRCP Server)
+      FreeSWITCH 侧配置
+  -->
+  <profile name="aliyun-mrcp-v2" version="2">
+    <!-- MRCP 服务器 IP -->
+    <param name="server-ip" value="127.0.0.1"/>
+    <param name="server-port" value="8060"/>
+    <param name="resource-location" value=""/>
+    
+    <!-- SIP 代理 IP (通常就是 FS 本机) -->
+    <param name="client-ip" value="127.0.0.1"/>
+    <param name="client-port" value="5090"/>
+    
+    <!-- SIP 传输协议 -->
+    <param name="sip-transport" value="udp"/>
+    <param name="ua-name" value="FreeSWITCH"/>
+    
+    <!-- RTP 端口范围 -->
+    <param name="rtp-ip" value="127.0.0.1"/>
+    <param name="rtp-port-min" value="14000"/>
+    <param name="rtp-port-max" value="15000"/>
+    
+    <!-- 编码设置 -->
+    <param name="codecs" value="PCMU PCMA L16/96/8000"/>
+    
+    <!-- 计时器设置 -->
+    <param name="max-connection-count" value="100"/>
+    <param name="offer-new-connection" value="1"/>
+  </profile>
+</include>
