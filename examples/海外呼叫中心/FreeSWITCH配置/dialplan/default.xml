@@ -1,0 +1,36 @@
+<include>
+  <context name="public">
+    
+    <!-- 1. 坐席外呼路由 -->
+    <!-- 匹配规则: 以 00 开头的国际号码 -->
+    <extension name="outbound_to_aliyun">
+      <condition field="destination_number" expression="^(00\d+)$">
+        <action application="set" data="effective_caller_id_number=YOUR_DID_NUMBER"/>
+        <!-- 通过 aliyun-intl 网关拨出 -->
+        <action application="bridge" data="sofia/gateway/aliyun-intl/$1"/>
+      </condition>
+    </extension>
+
+    <!-- 2. 坐席互拨路由 -->
+    <!-- 匹配规则: 1000-1999 的分机号 -->
+    <extension name="local_extension">
+      <condition field="destination_number" expression="^(1\d{3})$">
+        <action application="set" data="dialed_extension=$1"/>
+        <!-- 呼叫注册的 WebRTC 用户 -->
+        <action application="bridge" data="user/${dialed_extension}@${domain_name}"/>
+      </condition>
+    </extension>
+
+    <!-- 3. 客户呼入路由 -->
+    <!-- 匹配规则: 阿里云分配的 DID 号码 -->
+    <extension name="inbound_from_aliyun">
+      <condition field="destination_number" expression="^85212345678$">
+        <action application="answer"/>
+        <action application="playback" data="ivr/welcome.wav"/>
+        <!-- 转给 ESL Socket 处理 (Outbound 模式) -->
+        <action application="socket" data="127.0.0.1:8084 async full"/>
+      </condition>
+    </extension>
+
+  </context>
+</include>

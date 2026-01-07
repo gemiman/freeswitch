@@ -1,0 +1,38 @@
+<profile name="internal-webrtc">
+  <!-- 
+      WebRTC 专用 Profile，建议与普通 SIP 分离 
+      端口通常使用 5066 (WS) 或 7443 (WSS)
+  -->
+  <settings>
+    <!-- 基础网络设置 -->
+    <param name="sip-ip" value="$${local_ip_v4}"/>
+    <param name="rtp-ip" value="$${local_ip_v4}"/>
+    <!-- 关键: 开启 WebSocket 绑定 -->
+    <param name="ws-binding" value=":5066"/>
+    <param name="wss-binding" value=":7443"/>
+    
+    <!-- 证书配置 (必须是公网受信任的证书，自签名浏览器会拦截) -->
+    <param name="tls-cert-dir" value="$${conf_dir}/ssl"/>
+    <param name="tls-version" value="$${sip_tls_version}"/>
+    
+    <!-- WebRTC 核心参数 -->
+    <param name="enable-3pcc" value="true"/>
+    <param name="dtmf-type" value="rfc2833"/>
+    <param name="codec-prefs" value="OPUS,PCMU,PCMA"/>
+    
+    <!-- NAT 穿透 (公网 IP 自动修正) -->
+    <param name="ext-rtp-ip" value="auto-nat"/>
+    <param name="ext-sip-ip" value="auto-nat"/>
+    <param name="apply-nat-acl" value="nat.auto"/>
+    
+    <!-- 音视频设置 -->
+    <param name="libopus-use-vbr" value="true"/>
+    <param name="inbound-bypass-media" value="false"/> <!-- WebRTC 必须经过 FS 转码/加密 -->
+    <param name="media-option" value="resume-media-on-hold"/>
+    
+    <!-- 调试 -->
+    <param name="debug" value="0"/>
+    <param name="sip-trace" value="no"/>
+    <param name="context" value="public"/>
+  </settings>
+</profile>
