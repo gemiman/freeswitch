@@ -60,6 +60,11 @@ services:
     environment:
       - TZ=Asia/Shanghai
       # SOUND_RATES=8000:16000:32000:48000 (可选：指定加载的音频采样率)
+      
+      # [安全设置] 启动时自动替换默认密码
+      # 注意：这将直接修改 conf/vars.xml 和 conf/autoload_configs/event_socket.conf.xml 文件
+      - FS_DEFAULT_PASSWORD=MySecretPass123  # 分机注册密码 (原 1234)
+      - FS_ESL_PASSWORD=ClueConStrong        # ESL 接口密码 (原 ClueCon)
 
     # -------------------------------------------------------------------------
     # 系统资源限制 (生产环境必备)

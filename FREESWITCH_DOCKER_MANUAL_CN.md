@@ -1,7 +1,7 @@
 # FreeSWITCH Docker 生产级部署与使用手册
 
 ## 1. 镜像信息
-*   **镜像**: `gemiman/freeswitch:0.0.3-amd64`
+*   **镜像**: `gemiman/freeswitch:0.0.9-amd64`
 *   **功能**: 全功能 FreeSWITCH + Nginx 录音服务器
 *   **架构**: x86_64 (Linux)
 
@@ -17,7 +17,7 @@
 mkdir -p conf recordings log db
 
 # 从镜像中提取默认配置
-docker run --rm --entrypoint tar gemiman/freeswitch:0.0.3-amd64 -cC /usr/local/freeswitch conf | tar xC ./
+docker run --rm --entrypoint tar gemiman/freeswitch:0.0.9-amd64 -cC /usr/local/freeswitch conf | tar xC ./
 ```
 
 执行完上述命令后，当前目录下应出现 `conf/` 文件夹。
@@ -31,7 +31,7 @@ version: '3.8'
 
 services:
   freeswitch:
-    image: gemiman/freeswitch:0.0.3-amd64
+    image: gemiman/freeswitch:0.0.9-amd64
     container_name: freeswitch_prod
     restart: unless-stopped
     
@@ -48,7 +48,7 @@ services:
       - "8021:8021/tcp"
       - "7443:7443/tcp"
       - "5066:5066/tcp"
-      - "8080:80/tcp"
+      - "8082:8082/tcp"
       - "16384-32768:16384-32768/udp"
 
     volumes:
@@ -67,6 +67,8 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+      nice: -20
+      rtprio: 99
     
     deploy:
       resources:
@@ -82,6 +84,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+
+    # 允许容器调整进程优先级以获得更好的实时性 (消除 SCHED_FIFO 错误)
+    cap_add:
+      - SYS_NICE
+      - SYS_RESOURCE
 
     logging:
       driver: "json-file"
@@ -139,6 +146,9 @@ docker compose exec freeswitch fs_cli
     <X-PRE-PROCESS cmd="set" data="default_password=1234"/>
     ```
     **生产环境必须修改**为强密码。这是分机注册密码。
+    
+    > **自动修改功能**: 您可以在 `docker-compose.yml` 中设置环境变量 `FS_DEFAULT_PASSWORD`。容器启动时会自动将 `vars.xml` 中的默认密码替换为您指定的值。
+    > 同理，设置 `FS_ESL_PASSWORD` 可自动修改 ESL 密码。
 
 *   **本机 IP**:
     ```xml
@@ -202,7 +212,7 @@ docker compose exec freeswitch fs_cli
 
 ### 4.2 Nginx 无法访问录音
 检查：
-1.  容器端口映射是否正确 (`-p 8080:80`)。
+1.  容器端口映射是否正确 (`-p 8082:8082`)。
 2.  `recordings` 目录权限是否正确 (应属于 freeswitch 用户)。
 3.  是否有录音文件生成。
 

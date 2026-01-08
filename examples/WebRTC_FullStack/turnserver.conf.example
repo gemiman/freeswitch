@@ -27,3 +27,6 @@ no-auth-ping
 # 日志
 log-file=stdout
 simple-log
+
+# CLI 密码 (防止 Coturn 报错)
+cli-password=123456

@@ -14,7 +14,12 @@ fi
 
 DOMAIN=${DOMAIN:-"rtc.example.com"}
 TURN_SECRET=${TURN_SECRET:-"MySuperSecretKey123"}
-FS_PASSWORD=${FS_PASSWORD:-"StrongPassword123!"}
+
+# 增加交互式输入
+if [ -z "$FS_PASSWORD" ]; then
+    read -p "请输入 FreeSWITCH 注册密码 (默认: StrongPassword123!): " FS_PASSWORD
+    FS_PASSWORD=${FS_PASSWORD:-"StrongPassword123!"}
+fi
 
 echo "============================================================"
 echo "正在初始化 FreeSWITCH 配置..."
@@ -28,12 +33,16 @@ echo "============================================================"
 mkdir -p conf recordings log db certs
 
 # 3. 从 Docker 镜像提取默认配置 (如果 conf 为空)
-if [ ! "$(ls -A conf)" ]; then
-    echo "正在从 Docker 镜像提取默认配置..."
-    docker run --rm --entrypoint tar gemiman/freeswitch:0.0.3-amd64 -cC /usr/local/freeswitch conf | tar xC ./
+# 注意：我们必须确保提取的是完整的配置
+# 如果之前提取过但不完整（比如只有 overlay），会导致 conf 不为空从而跳过。
+# 这里增加一个检测：如果缺 freeswitch.xml，就强制重新提取
+if [ ! -f conf/freeswitch.xml ]; then
+    echo "检测到 conf 目录不完整（缺少 freeswitch.xml），正在从 Docker 镜像重新提取..."
+    # 镜像内路径变更: /usr/local/freeswitch/etc/freeswitch
+    docker run --rm --entrypoint tar gemiman/freeswitch:0.0.9-amd64 -cC /usr/local/freeswitch/etc/freeswitch . | tar xC ./conf
     echo "默认配置提取完成。"
 else
-    echo "检测到 conf 目录不为空，跳过默认配置提取。"
+    echo "检测到 conf 目录完整，跳过默认配置提取。"
 fi
 
 # 4. 应用 Overlay 配置 (覆盖默认文件)
@@ -50,14 +59,19 @@ cp certs/* conf/ssl/ 2>/dev/null || echo "警告: certs 目录中没有发现证
 echo "正在替换变量..."
 
 # 替换 vars.xml
+# 兼容替换 CHANGE_ME 和 默认值 1234
 sed -i "s/YOUR_PUBLIC_IP/$PUBLIC_IP/g" conf/vars.xml
 sed -i "s/YOUR_TURN_SECRET/$TURN_SECRET/g" conf/vars.xml
 sed -i "s/CHANGE_ME/$FS_PASSWORD/g" conf/vars.xml
+sed -i "s/default_password=1234/default_password=$FS_PASSWORD/g" conf/vars.xml
+
 # 替换默认域名
 sed -i "s/rtc.example.com/$DOMAIN/g" conf/vars.xml
+sed -i "s/domain=\$\${local_ip_v4}/domain=$DOMAIN/g" conf/vars.xml
 
 # 替换 event_socket.conf.xml
 sed -i "s/CHANGE_ME/$FS_PASSWORD/g" conf/autoload_configs/event_socket.conf.xml
+sed -i "s/value=\"ClueCon\"/value=\"$FS_PASSWORD\"/g" conf/autoload_configs/event_socket.conf.xml
 
 # 替换 turnserver.conf
 if [ -f turnserver.conf.example ]; then

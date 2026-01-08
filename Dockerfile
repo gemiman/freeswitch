@@ -24,29 +24,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /usr/src
 RUN git clone https://github.com/signalwire/libks.git \
     && cd libks \
-    && cmake . -DCMAKE_INSTALL_PREFIX=/usr -DWITH_LIBBACKTRACE=1 \
+    && cmake . -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib -DWITH_LIBBACKTRACE=1 \
     && make && make install
 
 # 3. 编译 signalwire-c (SignalWire 客户端库)
 WORKDIR /usr/src
 RUN git clone https://github.com/signalwire/signalwire-c.git \
     && cd signalwire-c \
-    && cmake . -DCMAKE_INSTALL_PREFIX=/usr \
+    && cmake . -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib \
     && make -j$(nproc) && make install
 
 # 4. 编译 sofia-sip (SIP 协议栈)
 WORKDIR /usr/src
 RUN git clone https://github.com/freeswitch/sofia-sip.git \
     && cd sofia-sip \
-    && ./bootstrap.sh && ./configure --prefix=/usr \
+    && ./bootstrap.sh && ./configure --prefix=/usr --libdir=/usr/lib \
     && make -j$(nproc) && make install
 
 # 5. 编译 spandsp (DSP 信号处理库)
 WORKDIR /usr/src
 RUN git clone https://github.com/freeswitch/spandsp.git \
     && cd spandsp \
-    && ./bootstrap.sh && ./configure --prefix=/usr \
-    && make -j$(nproc) && make install
+    && ./bootstrap.sh && ./configure --prefix=/usr --libdir=/usr/lib \
+    && make -j$(nproc) && make install \
+    && (cp -a /usr/lib/$(uname -m)-linux-gnu/libspandsp* /usr/lib/ 2>/dev/null || true)
 
 # 6. 编译 FreeSWITCH
 # 复制当前源码到容器
@@ -94,7 +95,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 libodbc2 \
     ca-certificates \
     net-tools iproute2 \
-    nginx \
+    nginx libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 # 配置 Nginx
@@ -108,6 +109,8 @@ RUN chmod +x /entrypoint.sh
 
 # 从 builder 复制 FreeSWITCH 安装目录
 COPY --from=builder /usr/local/freeswitch /usr/local/freeswitch
+# 给 FreeSWITCH 二进制文件赋予网络和优先级权限 (允许非 root 用户调整 nice/rtprio)
+RUN setcap 'cap_net_bind_service,cap_sys_nice,cap_sys_resource+ep' /usr/local/freeswitch/bin/freeswitch
 
 # 从 builder 复制手动编译的库
 # 注意：这些库被安装到了 /usr/lib 或 /usr/lib/x86_64-linux-gnu，取决于 debian 的配置
@@ -142,7 +145,7 @@ EXPOSE 5066/tcp 7443/tcp
 # Verto
 EXPOSE 8081/tcp 8082/tcp
 # Nginx 录音下载
-EXPOSE 80/tcp
+EXPOSE 8082/tcp
 # RTP (范围可根据 freeswitch.xml 配置调整)
 EXPOSE 16384-32768/udp
 
