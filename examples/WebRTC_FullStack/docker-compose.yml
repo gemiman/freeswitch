@@ -30,6 +30,7 @@ services:
       - ./recordings:/usr/local/freeswitch/recordings
       - ./log:/usr/local/freeswitch/log
       - ./db:/usr/local/freeswitch/db
+      - ./certs:/usr/local/freeswitch/conf/ssl # 挂载证书目录
       - /etc/localtime:/etc/localtime:ro
 
     environment:

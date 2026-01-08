@@ -1,0 +1,36 @@
+<include>
+  <!-- Codec 偏好: 优先 Opus (WebRTC), 其次 G711 -->
+  <X-PRE-PROCESS cmd="set" data="global_codec_prefs=OPUS,PCMU,PCMA,H264,VP8"/>
+  <X-PRE-PROCESS cmd="set" data="outbound_codec_prefs=OPUS,PCMU,PCMA,H264,VP8"/>
+
+  <!-- 
+       [安全] 默认密码 
+       setup.sh 脚本会自动替换 CHANGE_ME 
+  -->
+  <X-PRE-PROCESS cmd="set" data="default_password=CHANGE_ME"/>
+  <X-PRE-PROCESS cmd="set" data="default_provider_password=CHANGE_ME"/>
+  
+  <!-- 
+       [网络] 公网 IP 和 TURN 设置
+       setup.sh 脚本会自动替换 YOUR_PUBLIC_IP 和 YOUR_TURN_SECRET
+  -->
+  <X-PRE-PROCESS cmd="set" data="external_rtp_ip=YOUR_PUBLIC_IP"/>
+  <X-PRE-PROCESS cmd="set" data="external_sip_ip=YOUR_PUBLIC_IP"/>
+  
+  <!-- TURN 服务器地址 (通常与 public ip 一致) -->
+  <X-PRE-PROCESS cmd="set" data="turn_server_ip=YOUR_PUBLIC_IP"/>
+  <X-PRE-PROCESS cmd="set" data="turn_server_passwd=YOUR_TURN_SECRET"/>
+
+  <!-- 域名 -->
+  <X-PRE-PROCESS cmd="set" data="domain=$${local_ip_v4}"/>
+  <X-PRE-PROCESS cmd="set" data="domain_name=$${domain}"/>
+  
+  <!-- SIP 端口 -->
+  <X-PRE-PROCESS cmd="set" data="internal_sip_port=5060"/>
+  <X-PRE-PROCESS cmd="set" data="external_sip_port=5080"/>
+  <X-PRE-PROCESS cmd="set" data="internal_tls_port=5061"/>
+  <X-PRE-PROCESS cmd="set" data="external_tls_port=5081"/>
+  
+  <!-- 录音目录 -->
+  <X-PRE-PROCESS cmd="set" data="recordings_dir=/usr/local/freeswitch/recordings"/>
+</include>
