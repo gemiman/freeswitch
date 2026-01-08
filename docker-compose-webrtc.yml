@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ---------------------------------------------------------------------------
@@ -8,12 +8,12 @@ services:
     image: gemiman/freeswitch:0.0.3-amd64
     container_name: freeswitch_webrtc
     restart: unless-stopped
-    
+
     # [网络模式]
     # 强烈建议 Linux 使用 'host' 模式。WebRTC 涉及海量 UDP 端口，NAT 是最大障碍。
     # 如果是 Mac/Windows 开发，请注释掉 network_mode，并取消 ports 注释（但可能有单通问题）。
     network_mode: host
-    
+
     # ports:
     #   - "5060:5060/tcp" # SIP TCP
     #   - "5060:5060/udp" # SIP UDP
@@ -43,7 +43,7 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    
+
     healthcheck:
       test: ["CMD", "fs_cli", "-x", "status"]
       interval: 30s
@@ -54,13 +54,13 @@ services:
   # Coturn (TURN/STUN 中继服务器)
   # ---------------------------------------------------------------------------
   coturn:
-    image: coturn/coturn:4.6.2
+    image: coturn/coturn:4.8.0
     container_name: coturn_server
     restart: always
-    
+
     # Coturn 必须使用 host 模式，因为它需要监听成千上万个中继端口
     network_mode: host
-    
+
     # 如果必须使用 bridge 模式 (不推荐)，则需要暴露所有 range 端口
     # ports:
     #   - "3478:3478/tcp"
@@ -70,13 +70,13 @@ services:
     # 启动命令配置
     # 请务必修改 --external-ip 和 --static-auth-secret
     command:
-      - -n                          # 前台运行
-      - --log-file=stdout           # 日志输出到控制台
-      - --min-port=49152            # UDP 中继端口下限
-      - --max-port=65535            # UDP 中继端口上限
-      - --listening-ip=0.0.0.0      # 监听所有网卡
+      - -n # 前台运行
+      - --log-file=stdout # 日志输出到控制台
+      - --min-port=49152 # UDP 中继端口下限
+      - --max-port=65535 # UDP 中继端口上限
+      - --listening-ip=0.0.0.0 # 监听所有网卡
       - --external-ip=${PUBLIC_IP:-127.0.0.1} # [重要] 公网 IP，默认回环，生产必须改
-      - --realm=rtc.company.com     # 域名标识
-      - --use-auth-secret           # 启用 REST API 认证机制
+      - --realm=rtc.company.com # 域名标识
+      - --use-auth-secret # 启用 REST API 认证机制
       - --static-auth-secret=MySuperSecretKey123 # [重要] 共享密钥，需与 FS 配置一致
-      - --no-auth-ping              # 安全加固
+      - --no-auth-ping # 安全加固

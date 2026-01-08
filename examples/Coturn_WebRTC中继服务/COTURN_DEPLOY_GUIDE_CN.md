@@ -25,19 +25,19 @@ graph LR
 ### docker-compose.yml
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   coturn:
-    image: coturn/coturn:4.6.2
+    image: coturn/coturn:4.8.0
     container_name: coturn
     restart: always
-    network_mode: host  # 强烈建议 host 模式，否则端口映射会消耗大量 CPU
-    
+    network_mode: host # 强烈建议 host 模式，否则端口映射会消耗大量 CPU
+
     environment:
       # 填写你的公网 IP (必须配置，否则无法中继)
       - EXTERNAL_IP=1.2.3.4
-    
+
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf
 ```
@@ -112,16 +112,19 @@ no-auth-ping
 ## 4. 验证测试
 
 ### 4.1 测试 Coturn 服务
+
 访问 [Trickle ICE](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/) 网站。
+
 1.  删除默认的 Google STUN 服务器。
 2.  添加你的服务器:
-    *   URI: `turn:1.2.3.4:3478`
-    *   Username: (你需要手动用代码生成一个临时账号，或者暂时在 conf 里开启 `user=test:test` 来测试)
-    *   Password: ...
+    - URI: `turn:1.2.3.4:3478`
+    - Username: (你需要手动用代码生成一个临时账号，或者暂时在 conf 里开启 `user=test:test` 来测试)
+    - Password: ...
 3.  点击 **Gather candidates**。
 4.  如果看到类型为 **relay** 的候选者出现，说明 TURN 服务工作正常。
 
 ### 4.2 联调测试
+
 1.  重启 FreeSWITCH 和 Coturn。
 2.  打开浏览器控制台 (F12)。
 3.  发起 WebRTC 呼叫。
@@ -135,11 +138,13 @@ no-auth-ping
 **Q: 为什么配置了 TURN 还是单向声音？**
 A: 检查云服务器的 **安全组 (Security Group)**。
 Coturn 需要开放：
-*   **TCP/UDP 3478** (信令)
-*   **UDP 49152-65535** (媒体数据转发) <- **这一步最容易被遗忘！**
+
+- **TCP/UDP 3478** (信令)
+- **UDP 49152-65535** (媒体数据转发) <- **这一步最容易被遗忘！**
 
 **Q: FreeSWITCH 和 Coturn 在同一台机器，端口冲突怎么办？**
-A: 
-*   FreeSWITCH 默认 RTP 端口是 `16384-32768`。
-*   Coturn 我们配置了 `49152-65535`。
-*   两者完全错开，不会冲突。只要不占用 SIP 的 5060/5080 即可。
+A:
+
+- FreeSWITCH 默认 RTP 端口是 `16384-32768`。
+- Coturn 我们配置了 `49152-65535`。
+- 两者完全错开，不会冲突。只要不占用 SIP 的 5060/5080 即可。
