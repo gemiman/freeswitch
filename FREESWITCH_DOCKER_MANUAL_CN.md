@@ -99,12 +99,13 @@ docker compose up -d
 
 ### 2.3 进阶：WebRTC 场景部署 (集成 Coturn)
 
-针对 WebRTC 场景，我们提供了 `docker-compose-webrtc.yml`，它集成了 **Coturn (TURN/STUN)** 服务器，解决 NAT 穿透导致的 WebRTC “不出声” 或 “打不通” 问题。
+针对 WebRTC 场景，我们在 `examples/WebRTC_FullStack/` 目录下提供了一套完整的编排方案，集成了 **Coturn (TURN/STUN)** 服务器。
 
 #### 启动 WebRTC 组合方案：
 ```bash
 # 请将 1.2.3.4 替换为你的服务器公网 IP
-PUBLIC_IP=1.2.3.4 docker compose -f docker-compose-webrtc.yml up -d
+cd examples/WebRTC_FullStack
+PUBLIC_IP=1.2.3.4 docker compose up -d
 ```
 
 #### 配置 FreeSWITCH 对接 Coturn：
