@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # FreeSWITCH (核心软交换)
+  # ---------------------------------------------------------------------------
+  freeswitch:
+    image: gemiman/freeswitch:0.0.3-amd64
+    container_name: freeswitch_webrtc
+    restart: unless-stopped
+    
+    # [网络模式]
+    # 强烈建议 Linux 使用 'host' 模式。WebRTC 涉及海量 UDP 端口，NAT 是最大障碍。
+    # 如果是 Mac/Windows 开发，请注释掉 network_mode，并取消 ports 注释（但可能有单通问题）。
+    network_mode: host
+    
+    # ports:
+    #   - "5060:5060/tcp" # SIP TCP
+    #   - "5060:5060/udp" # SIP UDP
+    #   - "5061:5061/tcp" # SIP TLS
+    #   - "5066:5066/tcp" # WS (WebRTC)
+    #   - "7443:7443/tcp" # WSS (WebRTC Secure)
+    #   - "8021:8021/tcp" # ESL
+    #   - "8080:80/tcp"   # Nginx Recordings
+    #   - "16384-32768:16384-32768/udp" # RTP Range
+
+    volumes:
+      # 配置文件 (启动前请先从镜像复制到本地 conf 目录)
+      - ./conf:/usr/local/freeswitch/conf
+      - ./recordings:/usr/local/freeswitch/recordings
+      - ./log:/usr/local/freeswitch/log
+      - ./db:/usr/local/freeswitch/db
+      - /etc/localtime:/etc/localtime:ro
+
+    environment:
+      - TZ=Asia/Shanghai
+      # 提示: 如果遇到 WebRTC 连接失败，尝试设置外部 IP 变量
+      # - EXTERNAL_RTP_IP=1.2.3.4
+      # - EXTERNAL_SIP_IP=1.2.3.4
+
+    ulimits:
+      core: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    
+    healthcheck:
+      test: ["CMD", "fs_cli", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Coturn (TURN/STUN 中继服务器)
+  # ---------------------------------------------------------------------------
+  coturn:
+    image: coturn/coturn:4.6.2
+    container_name: coturn_server
+    restart: always
+    
+    # Coturn 必须使用 host 模式，因为它需要监听成千上万个中继端口
+    network_mode: host
+    
+    # 如果必须使用 bridge 模式 (不推荐)，则需要暴露所有 range 端口
+    # ports:
+    #   - "3478:3478/tcp"
+    #   - "3478:3478/udp"
+    #   - "49152-65535:49152-65535/udp"
+
+    # 启动命令配置
+    # 请务必修改 --external-ip 和 --static-auth-secret
+    command:
+      - -n                          # 前台运行
+      - --log-file=stdout           # 日志输出到控制台
+      - --min-port=49152            # UDP 中继端口下限
+      - --max-port=65535            # UDP 中继端口上限
+      - --listening-ip=0.0.0.0      # 监听所有网卡
+      - --external-ip=${PUBLIC_IP:-127.0.0.1} # [重要] 公网 IP，默认回环，生产必须改
+      - --realm=rtc.company.com     # 域名标识
+      - --use-auth-secret           # 启用 REST API 认证机制
+      - --static-auth-secret=MySuperSecretKey123 # [重要] 共享密钥，需与 FS 配置一致
+      - --no-auth-ping              # 安全加固
