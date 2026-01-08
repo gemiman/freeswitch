@@ -1,0 +1,11 @@
+<include>
+  <!-- 自动录音扩展：优先级设为 0，确保最先执行 -->
+  <extension name="Global_Auto_Record" continue="true">
+    <condition field="${destination_number}" expression="^(\d{4})$">
+      <action application="set" data="record_stereo=true"/>
+      <!-- 创建日期子目录并启动录音 -->
+      <!-- 文件名格式: 主叫-被叫-通话开始时间(yyyyMMddHHmmss)-话单id.wav -->
+      <action application="record_session" data="$${recordings_dir}/${strftime(%Y-%m-%d)}/${caller_id_number}-${destination_number}-${strftime(%Y%m%d%H%M%S)}-${uuid}.wav"/>
+    </condition>
+  </extension>
+</include>
