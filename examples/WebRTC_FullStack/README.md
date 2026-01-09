@@ -64,8 +64,74 @@ docker compose up -d
 *   **UDP 16384-32768**: FreeSWITCH 媒体流 (RTP)。
 *   **UDP 49152-65535**: Coturn 媒体中继流。
 
-## 5. 文件说明
+## 5. 安全加固 (Fail2Ban 防暴力破解)
+**强烈建议**在生产环境宿主机上部署 Fail2Ban，以自动封禁扫描和暴力破解 SIP 密码的攻击者 IP。
+
+### 5.1 安装 Fail2Ban (宿主机)
+```bash
+# Debian/Ubuntu
+sudo apt-get update && sudo apt-get install fail2ban -y
+
+# CentOS/RHEL
+sudo yum install epel-release -y
+sudo yum install fail2ban -y
+```
+
+### 5.2 配置 FreeSWITCH 监控规则
+Fail2Ban 需要通过宿主机映射出的日志文件来检测攻击。
+
+1. **创建过滤器**:
+   在 `/etc/fail2ban/filter.d/freeswitch.conf` 中确认或写入规则（通常默认已存在，若无请参考以下内容）：
+   ```ini
+   [Definition]
+   failregex = ^\.\d+ \[WARNING\] sofia_reg\.c:\d+ SIP auth (failure|challenge) \(REGISTER|INVITE|SUBSCRIBE\) on sofia profile \'[^']+\' for \[.*\] from ip <HOST>
+   ignoreregex =
+   ```
+
+2. **创建 Jail 配置**:
+   新建或编辑 `/etc/fail2ban/jail.local`，添加以下内容：
+   ```ini
+   [freeswitch]
+   enabled  = true
+   port     = 5060,5061,5080,5081,7443
+   logpath  = /你的项目路径/examples/WebRTC_FullStack/log/freeswitch.log
+   maxretry = 5
+   findtime = 600
+   bantime  = 3600
+   action   = iptables-allports[name=freeswitch, protocol=all]
+   ```
+   *注意：请将 `logpath` 替换为您宿主机上实际的 `log/freeswitch.log` 绝对路径。*
+
+3. **重启 Fail2Ban**:
+   ```bash
+   sudo systemctl restart fail2ban
+   sudo fail2ban-client status freeswitch
+   ```
+   现在，如果有人在一分钟内连续 5 次尝试密码错误，其 IP 将被自动封禁 1 小时。
+
+## 6. 录音下载认证
+默认开启了 Nginx Basic Auth 认证。
+
+*   **默认账号**: `admin`
+*   **默认密码**: `admin`
+
+### 如何修改密码？
+在宿主机运行以下命令生成新密码（覆盖 `.htpasswd` 文件）：
+```bash
+# 如果有 htpasswd 工具 (推荐)
+htpasswd -bc .htpasswd 你的用户名 你的新密码
+
+# 或者使用 openssl (通用兼容模式)
+# 使用 -apr1 算法 (Nginx/Apache 标准)
+echo "你的用户名:$(openssl passwd -apr1 你的新密码)" > .htpasswd
+```
+修改后，无需重启容器，刷新页面即可生效。
+
+## 7. 文件说明
 *   `conf_overlay/`: 生产环境配置模板（安全加固、WebRTC 适配）。
 *   `certs/`: 证书存放地。
 *   `setup.sh`: 自动化部署粘合脚本。
 *   `docker-compose.yml`: 生产级容器编排。
+*   `.htpasswd`: Nginx 认证密码文件。
+*   `nginx_recordings.conf`: Nginx 录音服务配置。
+*   `nginx.conf`: Nginx 主配置 (root用户运行)。
