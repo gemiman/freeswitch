@@ -1,0 +1,19 @@
+{
+  "name": "sdks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test:monitor": "node test-monitor.js",
+    "test:agent": "node test-agent.js",
+    "test": "npm run test:monitor && npm run test:agent"
+  },
+  "keywords": ["freeswitch", "sdk", "webrtc"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "vc-agent-sdk": "file:vc-agent-sdk/pkg",
+    "vc-monitor-sdk": "file:vc-monitor-sdk/pkg"
+  }
+}

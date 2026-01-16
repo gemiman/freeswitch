@@ -1,0 +1,26 @@
+# 创建细化访问令牌的步骤
+
+1. 访问 https://www.npmjs.com/settings/developers
+2. 点击 "Create New Token"
+3. 选择 "Granular Access Token"
+4. 为令牌命名（如：freeswitch-sdk-publish）
+5. 设置 Expiration（建议：90 days）
+6. 在 "Package access" 部分，选择：
+   - 选择 "Only select packages"
+   - 点击 "+ Add package" 并输入 "yy-vcswitch-mnt-api"
+   - 点击 "+ Add package" 并输入 "yy-vcswitch-agent-api"
+7. 在 "Package permissions" 部分，为每个包选择：
+   - "Read and write"
+8. 确保选中 "Bypass 2FA" 选项（如果需要）
+9. 点击 "Create token"
+10. 复制生成的访问令牌
+
+# 使用令牌发布
+
+将令牌设置到 npm 配置中：
+npm config set //registry.npmjs.org/:_authToken=YOUR_GENERATED_TOKEN
+
+然后发布：
+cd vc-monitor-sdk/pkg && npm publish --access=public
+cd ../../vc-agent-sdk/pkg && npm publish --access=public
+

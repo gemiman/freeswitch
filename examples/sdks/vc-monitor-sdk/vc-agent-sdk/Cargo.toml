@@ -1,0 +1,11 @@
+[package]
+name = "vc-agent-sdk"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+js-sys = "0.3.85"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wasm-bindgen = { version = "0.2.108", features = ["serde"] }
+web-sys = { version = "0.3.85", features = ["DomParser", "Document", "Element", "Window", "WebSocket", "console"] }
